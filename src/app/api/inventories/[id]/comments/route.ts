@@ -6,12 +6,13 @@ import { prisma } from "@/lib/prisma";
 // Get comments
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const {id} = await params;
     const comments = await prisma.comment.findMany({
       where: {
-        inventoryId: params.id,
+        inventoryId: id,
       },
       include: {
         user: {
