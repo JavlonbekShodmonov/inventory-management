@@ -42,7 +42,7 @@ export async function GET(
 // Post comment
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -61,9 +61,10 @@ export async function POST(
       );
     }
 
+    const {id} = await params;
     // Verify inventory exists
     const inventory = await prisma.inventory.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!inventory) {
@@ -77,7 +78,7 @@ export async function POST(
     const comment = await prisma.comment.create({
       data: {
         content,
-        inventoryId: params.id,
+        inventoryId: id,
         userId: session.user.id,
       },
       include: {
