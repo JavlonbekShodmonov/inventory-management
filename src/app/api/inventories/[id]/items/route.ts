@@ -72,7 +72,7 @@ async function generateCustomId(inventoryId: string, format: any[]): Promise<str
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -82,10 +82,10 @@ export async function POST(
     }
 
     const body = await request.json();
-
+    const {id} = await params;
     // Get inventory
     const inventory = await prisma.inventory.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         accessGrants: true,
       },
@@ -111,12 +111,12 @@ export async function POST(
 
     // Generate custom ID
     const customIdFormat = inventory.customIdFormat as any[];
-    const customId = await generateCustomId(params.id, customIdFormat);
+    const customId = await generateCustomId(id, customIdFormat);
 
     // Create item
     const item = await prisma.item.create({
       data: {
-        inventoryId: params.id,
+        inventoryId: id,
         customId,
         createdById: session.user.id,
         stringField1: body.string_1 || null,

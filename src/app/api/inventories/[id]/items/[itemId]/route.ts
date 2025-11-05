@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 // Update item
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,10 +17,10 @@ export async function PATCH(
 
     const body = await request.json();
     const { customId, version, ...fieldData } = body;
-
+    const {id} = await params;
     // Get item with inventory
     const item = await prisma.item.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         inventory: {
           include: {
@@ -60,7 +60,7 @@ export async function PATCH(
     try {
       const updatedItem = await prisma.item.update({
         where: {
-          id: params.id,
+          id: id,
           version: item.version,
         },
         data: {

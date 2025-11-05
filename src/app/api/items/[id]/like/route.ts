@@ -6,18 +6,18 @@ import { prisma } from "@/lib/prisma";
 // Add like
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
-
+const {id} = await params;
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Check if item exists
     const item = await prisma.item.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!item) {
@@ -28,7 +28,7 @@ export async function POST(
     const existingLike = await prisma.like.findUnique({
       where: {
         itemId_userId: {
-          itemId: params.id,
+          itemId: id,
           userId: session.user.id,
         },
       },
@@ -44,7 +44,7 @@ export async function POST(
     // Create like
     const like = await prisma.like.create({
       data: {
-        itemId: params.id,
+        itemId: id,
         userId: session.user.id,
       },
     });

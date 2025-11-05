@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 // Add tag to inventory
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,6 +17,7 @@ export async function POST(
 
     const body = await request.json();
     const { tagName } = body;
+    const {id} = await params;
 
     if (!tagName || !tagName.trim()) {
       return NextResponse.json(
@@ -27,7 +28,7 @@ export async function POST(
 
     // Check permissions
     const inventory = await prisma.inventory.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!inventory) {
@@ -59,7 +60,7 @@ export async function POST(
     const existing = await prisma.inventoryTag.findUnique({
       where: {
         inventoryId_tagId: {
-          inventoryId: params.id,
+          inventoryId: id,
           tagId: tag.id,
         },
       },
@@ -75,7 +76,7 @@ export async function POST(
     // Connect tag to inventory
     const inventoryTag = await prisma.inventoryTag.create({
       data: {
-        inventoryId: params.id,
+        inventoryId: id,
         tagId: tag.id,
       },
       include: {
