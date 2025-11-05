@@ -8,15 +8,22 @@ import LikeButton from "@/components/item/like-button";
 import { useLocale } from "@/components/providers/locale-provider";
 
 interface ItemPageProps {
-  params: { id: string | string[] }; // <-- fix here
+  params: Promise<{ id: string }>;
 }
 
 export default function ItemPage({ params }: ItemPageProps) {
-  const id = Array.isArray(params.id) ? params.id[0] : params.id; // normalize
   const { locale } = useLocale();
   const [item, setItem] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [notFoundItem, setNotFoundItem] = useState(false);
+  const [id, setId] = useState<string | null>(null);
+
+  // Unwrap params Promise
+  useEffect(() => {
+    params.then((resolvedParams) => {
+      setId(resolvedParams.id);
+    });
+  }, [params]);
 
   useEffect(() => {
     if (!id) return;
@@ -141,26 +148,30 @@ export default function ItemPage({ params }: ItemPageProps) {
                     {field.title}
                   </div>
                   <div className="text-gray-900 dark:text-white">
-                    {field.fieldType.startsWith("BOOL")
-                      ? value
-                        ? locale === "ru"
-                          ? "✓ Да"
-                          : "✓ Yes"
-                        : locale === "ru"
-                        ? "✗ Нет"
-                        : "✗ No"
-                      : field.fieldType.startsWith("LINK")
-                      ? (
-                        <a
-                          href={value}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 underline"
-                        >
-                          {value}
-                        </a>
+                    {field.fieldType.startsWith("BOOL") ? (
+                      value ? (
+                        locale === "ru" ? (
+                          "✓ Да"
+                        ) : (
+                          "✓ Yes"
+                        )
+                      ) : locale === "ru" ? (
+                        "✗ Нет"
+                      ) : (
+                        "✗ No"
                       )
-                      : String(value)}
+                    ) : field.fieldType.startsWith("LINK") ? (
+                      <a
+                        href={value}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 underline"
+                      >
+                        {value}
+                      </a>
+                    ) : (
+                      String(value)
+                    )}
                   </div>
                 </div>
               );
