@@ -7,7 +7,7 @@ import { UserRole } from "@prisma/client";
 // Update user (role changes, block/unblock)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,11 +16,12 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const { action } = body;
 
     const targetUser = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!targetUser) {
@@ -32,7 +33,7 @@ export async function PATCH(
     switch (action) {
       case "make-admin":
         updatedUser = await prisma.user.update({
-          where: { id: params.id },
+          where: { id },
           data: { role: UserRole.ADMIN },
         });
         break;
@@ -40,7 +41,7 @@ export async function PATCH(
       case "remove-admin":
         // Allow admin to remove their own admin role!
         updatedUser = await prisma.user.update({
-          where: { id: params.id },
+          where: { id },
           data: { role: UserRole.USER },
         });
         break;
@@ -63,8 +64,8 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -80,8 +81,10 @@ export async function DELETE(
       );
     }
 
+    const { id } = await params;
+
     // Prevent deleting yourself
-    if (session.user.id === params.id) {
+    if (session.user.id === id) {
       return NextResponse.json(
         { error: "You cannot delete yourself" },
         { status: 400 }
@@ -89,7 +92,7 @@ export async function DELETE(
     }
 
     await prisma.user.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true }, { status: 200 });
