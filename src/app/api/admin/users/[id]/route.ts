@@ -62,16 +62,22 @@ export async function PATCH(
   }
 }
 
-// Delete user
 export async function DELETE(
-  request: NextRequest,
+  req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== UserRole.ADMIN) {
+    if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (session.user.role !== UserRole.ADMIN) {
+      return NextResponse.json(
+        { error: "Insufficient permissions" },
+        { status: 403 }
+      );
     }
 
     // Prevent deleting yourself
@@ -82,12 +88,11 @@ export async function DELETE(
       );
     }
 
-    // Delete user (cascade will handle related records)
     await prisma.user.delete({
       where: { id: params.id },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error("Error deleting user:", error);
     return NextResponse.json(
