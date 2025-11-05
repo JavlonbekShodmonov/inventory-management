@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "../../../components/providers/locale-provider";
 
+export const dynamic = 'force-dynamic';
+
 export default function SignIn() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
