@@ -2,16 +2,19 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation"; // ✅
+import { useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search as SearchIcon } from "lucide-react";
 import { useLocale } from "@/components/providers/locale-provider";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export default function SearchPage() {
   const { locale } = useLocale();
-  const searchParams = useSearchParams(); // ✅
-  const q = searchParams.get("q") || "";  // unwrap safely
+  const searchParams = useSearchParams();
+  const q = searchParams.get("q") || "";
 
   const [query, setQuery] = useState(q);
   const [inventories, setInventories] = useState<any[]>([]);
