@@ -161,7 +161,7 @@ export async function POST(
 // Bulk delete items
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -172,6 +172,7 @@ export async function DELETE(
 
     const body = await request.json();
     const { itemIds } = body;
+    const {id} = await params;
 
     if (!Array.isArray(itemIds) || itemIds.length === 0) {
       return NextResponse.json(
@@ -182,7 +183,7 @@ export async function DELETE(
 
     // Ensure inventory exists and user has delete access
     const inventory = await prisma.inventory.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { accessGrants: true },
     });
 
@@ -204,7 +205,7 @@ export async function DELETE(
     const deleteResult = await prisma.item.deleteMany({
       where: {
         id: { in: itemIds },
-        inventoryId: params.id,
+        inventoryId: id,
       },
     });
 
