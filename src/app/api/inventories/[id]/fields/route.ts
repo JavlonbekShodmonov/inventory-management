@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,10 +16,10 @@ export async function PUT(
 
     const body = await request.json();
     const { fields } = body;
-
+    const {id} = await params;
     // Get inventory and check permissions
     const inventory = await prisma.inventory.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!inventory) {
@@ -40,7 +40,7 @@ export async function PUT(
     await prisma.$transaction(async (tx) => {
       // Delete old fields
       await tx.inventoryField.deleteMany({
-        where: { inventoryId: params.id },
+        where: { inventoryId: id },
       });
 
       // Create new fields with proper indexing
@@ -60,7 +60,7 @@ export async function PUT(
         // Create field with indexed type (e.g., STRING_1, STRING_2)
         await tx.inventoryField.create({
           data: {
-            inventoryId: params.id,
+            inventoryId: id,
             fieldType: `${baseType}_${index + 1}`,
             fieldIndex: index,
             title: field.title,

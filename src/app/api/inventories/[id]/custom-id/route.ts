@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,10 +16,10 @@ export async function PUT(
 
     const body = await request.json();
     const { format } = body;
-
+    const {id} = await params;
     // Get inventory
     const inventory = await prisma.inventory.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!inventory) {
@@ -55,7 +55,7 @@ export async function PUT(
     // Update inventory
     const updatedInventory = await prisma.inventory.update({
       where: {
-        id: params.id,
+        id: id,
       },
       data: {
         customIdFormat: format,
