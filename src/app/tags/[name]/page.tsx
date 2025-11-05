@@ -13,13 +13,14 @@ import { Tag as TagIcon, ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 
 interface TagPageProps {
-  params: {
+  params: Promise<{
     name: string;
-  };
+}>;
 }
 
 export default async function TagPage({ params }: TagPageProps) {
-  const tagName = decodeURIComponent(params.name);
+  const {name} = await params;
+  const tagName = decodeURIComponent(name);
 
   const tag = await prisma.tag.findUnique({
     where: { name: tagName },

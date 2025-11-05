@@ -13,14 +13,15 @@ import {
 import { User, Package, Calendar } from "lucide-react";
 
 interface UserPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function UserPage({ params }: UserPageProps) {
+  const {id} = await params;
   const user = await prisma.user.findUnique({
-    where: { id: params.id },
+    where: { id: id },
     include: {
       inventories: {
         include: {
