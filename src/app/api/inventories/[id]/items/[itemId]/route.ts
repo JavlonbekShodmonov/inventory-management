@@ -112,7 +112,7 @@ export async function PATCH(
 // Delete item
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -121,9 +121,11 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+
+    const {id} = await params;
     // Get item with inventory
     const item = await prisma.item.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         inventory: {
           include: {
@@ -150,7 +152,7 @@ export async function DELETE(
 
     // Delete item
     await prisma.item.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });

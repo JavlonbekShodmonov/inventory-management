@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 // Revoke access
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; grantId: string } }
+  { params }: { params: Promise<{ id: string; grantId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,9 +15,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const {id} = await params;
     // Get inventory and check permissions
     const inventory = await prisma.inventory.findUnique({
-      where: { id: params.id },
+      where: { id},
     });
 
     if (!inventory) {
@@ -34,9 +35,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const {grantId} = await params;
     // Revoke access
     await prisma.inventoryAccess.delete({
-      where: { id: params.grantId },
+      where: { id: grantId },
     });
 
     return NextResponse.json({ success: true });

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 // Remove tag from inventory
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; tagId: string } }
+  { params }: { params: Promise<{ id: string; tagId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,9 +15,11 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+
+    const {id} = await params;
     // Check permissions
     const inventory = await prisma.inventory.findUnique({
-      where: { id: params.id },
+      where: { id},
     });
 
     if (!inventory) {
@@ -34,12 +36,14 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+
+    const {tagId} = await params;
     // Remove connection
     await prisma.inventoryTag.delete({
       where: {
         inventoryId_tagId: {
-          inventoryId: params.id,
-          tagId: params.tagId,
+          inventoryId: id,
+          tagId: tagId,
         },
       },
     });
