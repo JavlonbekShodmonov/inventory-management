@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 // Grant access to a user
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,9 +18,10 @@ export async function POST(
     const body = await request.json();
     const { userId } = body;
 
+    const {id} = await params;
     // Get inventory and check permissions
     const inventory = await prisma.inventory.findUnique({
-      where: { id: params.id },
+      where: { id},
     });
 
     if (!inventory) {
@@ -41,7 +42,7 @@ export async function POST(
     const existingGrant = await prisma.inventoryAccess.findUnique({
       where: {
         inventoryId_userId: {
-          inventoryId: params.id,
+          inventoryId: id,
           userId,
         },
       },
@@ -57,7 +58,7 @@ export async function POST(
     // Grant access
     const grant = await prisma.inventoryAccess.create({
       data: {
-        inventoryId: params.id,
+        inventoryId: id,
         userId,
       },
       include: {
