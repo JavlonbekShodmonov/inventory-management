@@ -25,6 +25,8 @@ model User {
   comments      Comment[]
   likes         Like[]
   accessGrants  InventoryAccess[]
+  apiTokens     ApiToken[]
+  salesforceIntegration SalesforceIntegration?
 }
 
 enum UserRole {
@@ -54,6 +56,7 @@ model Inventory {
   fields          InventoryField[]
   accessGrants    InventoryAccess[]
   comments        Comment[]
+  apiTokens       ApiToken[]
   
   @@index([creatorId])
   @@index([category])
@@ -227,5 +230,49 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// Add these models to your existing schema.prisma file
+
+model SalesforceIntegration {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  accessToken   String   @db.Text
+  refreshToken  String   @db.Text
+  instanceUrl   String
+  
+  salesforceAccountId  String?
+  salesforceContactId  String?
+  
+  lastSyncedAt  DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model ApiToken {
+  id            String    @id @default(cuid())
+  token         String    @unique @default(cuid())
+  name          String?
+  
+  inventoryId   String
+  inventory     Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  
+  createdById   String
+  createdBy     User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  
+  lastUsedAt    DateTime?
+  expiresAt     DateTime?
+  isActive      Boolean   @default(true)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([token])
+  @@index([inventoryId])
+  @@index([createdById])
 }
 
